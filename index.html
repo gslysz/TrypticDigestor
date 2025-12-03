@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tryptic Peptide Digestor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle">
+            <label class="switch">
+                <input type="checkbox" id="themeToggle" checked>
+                <span class="slider"></span>
+            </label>
+            <span class="theme-label">Cyberpunk Mode</span>
+        </div>
+        
+        <h1>Tryptic Peptide Digestor</h1>
+        <p class="subtitle">Generate tryptic peptide digests from protein sequences</p>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="proteinSelect">Select Protein:</label>
+                <select id="proteinSelect">
+                    <option value="nist">NIST mAb</option>
+                    <option value="herceptin">Herceptin</option>
+                    <option value="enolase">Enolase</option>
+                    <option value="bsa">BSA</option>
+                    <option value="custom">Custom (enter below)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="fastaInput">FASTA Protein Sequence:</label>
+                <textarea id="fastaInput">>light chain
+DIQMTQSPSTLSASVGDRVTITCSASSRVGYMHWYQQKPGKAPKLLIYDTSKLASGVPSRFSGSGSGTEFTLTISSLQPDDFATYYCFQGSGYPFTFGGGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC
+>heavy chain
+QVTLRESGPALVKPTQTLTLTCTFSGFSLSTAGMSVGWIRQPPGKALEWLADIWWDDKKHYNPSLKDRLTISKDTSKNQVVLKVTNMDPADTATYYCARDMIFNFYFDVWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK</textarea>
+            </div>
+            
+            <div class="input-group">
+                <label for="missedCleavages">Missed Cleavages:</label>
+                <input type="number" id="missedCleavages" min="0" max="5" value="0">
+                <span class="help-text">Number of allowed missed cleavage sites (0-5)</span>
+            </div>
+            
+            <button id="digestButton" class="btn-primary">Generate Digest</button>
+        </div>
+        
+        <div id="resultsSection" class="results-section" style="display: none;">
+            <div class="results-header">
+                <h2>Digest Results</h2>
+                <button id="exportButton" class="btn-secondary">Export to CSV</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-column="0" data-type="number">ID <span class="sort-arrow"></span></th>
+                            <th class="sortable" data-column="1" data-type="text">Chain/Protein <span class="sort-arrow"></span></th>
+                            <th class="sortable" data-column="2" data-type="text">Sequence <span class="sort-arrow"></span></th>
+                            <th class="sortable" data-column="3" data-type="number">Start Position <span class="sort-arrow"></span></th>
+                            <th class="sortable" data-column="4" data-type="number">End Position <span class="sort-arrow"></span></th>
+                            <th class="sortable" data-column="5" data-type="number">Mass (Da) <span class="sort-arrow"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="summary" class="summary"></div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
