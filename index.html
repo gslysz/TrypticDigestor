@@ -45,13 +45,30 @@ QVTLRESGPALVKPTQTLTLTCTFSGFSLSTAGMSVGWIRQPPGKALEWLADIWWDDKKHYNPSLKDRLTISKDTSKNQV
                 <span class="help-text">Number of allowed missed cleavage sites (0-5)</span>
             </div>
             
+            <div class="input-group">
+                <label for="minPeptideLength">Minimum Peptide Length:</label>
+                <input type="number" id="minPeptideLength" min="1" max="100" value="4">
+                <span class="help-text">Exclude peptides shorter than this length (1-100 amino acids)</span>
+            </div>
+            
+            <div class="input-group checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="cysteineAlkylation" checked>
+                    <span>Cysteine Alkylation (Carbamidomethyl, +57.02 Da)</span>
+                </label>
+                <span class="help-text">Apply fixed modification for reduced/alkylated cysteines (IAA)</span>
+            </div>
+            
             <button id="digestButton" class="btn-primary">Generate Digest</button>
         </div>
         
         <div id="resultsSection" class="results-section" style="display: none;">
             <div class="results-header">
                 <h2>Digest Results</h2>
-                <button id="exportButton" class="btn-secondary">Export to CSV</button>
+                <div class="export-buttons">
+                    <button id="exportButton" class="btn-secondary">Export to CSV</button>
+                    <button id="exportCompoundDBButton" class="btn-secondary btn-compound">Export Compound DB</button>
+                </div>
             </div>
             
             <div class="table-container">

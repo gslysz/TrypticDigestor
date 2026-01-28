@@ -7,8 +7,39 @@ const aminoAcidMasses = {
     'T': 101.04768, 'W': 186.07931, 'Y': 163.06333, 'V': 99.06841
 };
 
+// Amino acid elemental compositions (residue form - minus H2O)
+// Format: { C, H, N, O, S }
+const aminoAcidCompositions = {
+    'A': { C: 3, H: 5, N: 1, O: 1, S: 0 },   // Alanine
+    'R': { C: 6, H: 12, N: 4, O: 1, S: 0 },  // Arginine
+    'N': { C: 4, H: 6, N: 2, O: 2, S: 0 },   // Asparagine
+    'D': { C: 4, H: 5, N: 1, O: 3, S: 0 },   // Aspartic acid
+    'C': { C: 3, H: 5, N: 1, O: 1, S: 1 },   // Cysteine
+    'E': { C: 5, H: 7, N: 1, O: 3, S: 0 },   // Glutamic acid
+    'Q': { C: 5, H: 8, N: 2, O: 2, S: 0 },   // Glutamine
+    'G': { C: 2, H: 3, N: 1, O: 1, S: 0 },   // Glycine
+    'H': { C: 6, H: 7, N: 3, O: 1, S: 0 },   // Histidine
+    'I': { C: 6, H: 11, N: 1, O: 1, S: 0 },  // Isoleucine
+    'L': { C: 6, H: 11, N: 1, O: 1, S: 0 },  // Leucine
+    'K': { C: 6, H: 12, N: 2, O: 1, S: 0 },  // Lysine
+    'M': { C: 5, H: 9, N: 1, O: 1, S: 1 },   // Methionine
+    'F': { C: 9, H: 9, N: 1, O: 1, S: 0 },   // Phenylalanine
+    'P': { C: 5, H: 7, N: 1, O: 1, S: 0 },   // Proline
+    'S': { C: 3, H: 5, N: 1, O: 2, S: 0 },   // Serine
+    'T': { C: 4, H: 7, N: 1, O: 2, S: 0 },   // Threonine
+    'W': { C: 11, H: 10, N: 2, O: 1, S: 0 }, // Tryptophan
+    'Y': { C: 9, H: 9, N: 1, O: 2, S: 0 },   // Tyrosine
+    'V': { C: 5, H: 9, N: 1, O: 1, S: 0 }    // Valine
+};
+
 // Water mass for peptide calculation
 const H2O = 18.01056;
+
+// Carbamidomethyl modification (iodoacetamide alkylation of cysteine)
+const CARBAMIDOMETHYL = {
+    mass: 57.02146,
+    composition: { C: 2, H: 3, N: 1, O: 1, S: 0 }
+};
 
 // Predefined protein sequences
 const proteinLibrary = {
@@ -32,6 +63,47 @@ AVSKVYARSVYDSRGNPTVEVELTTEKGVFRSIVPSGASTGVHEALEMRDGDKSKWMGKGVLHAVKNVNDVIAPAFVKAN
     bsa: `>sp|P02769|ALBU_BOVIN
 MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPFDEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEPERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYYANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVARLSQKFPKAEFVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKECCDKPLLEKSHCIAEVEKDAIPENLPPLTADFAEDKDVCKNYQEAKDAFLGSFLYEYSRRHPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEKLGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLILNRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLPDTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVVSTQTALA`
 };
+
+// Calculate elemental composition for a peptide sequence
+function calculateFormula(peptideSequence, cysteineAlkylation = false) {
+    // Start with water (H2O) for the peptide termini
+    let composition = { C: 0, H: 2, N: 0, O: 1, S: 0 };
+    
+    for (let aa of peptideSequence) {
+        if (aminoAcidCompositions[aa]) {
+            const aaComp = aminoAcidCompositions[aa];
+            composition.C += aaComp.C;
+            composition.H += aaComp.H;
+            composition.N += aaComp.N;
+            composition.O += aaComp.O;
+            composition.S += aaComp.S;
+            
+            // Add carbamidomethyl modification for cysteines
+            if (aa === 'C' && cysteineAlkylation) {
+                composition.C += CARBAMIDOMETHYL.composition.C;
+                composition.H += CARBAMIDOMETHYL.composition.H;
+                composition.N += CARBAMIDOMETHYL.composition.N;
+                composition.O += CARBAMIDOMETHYL.composition.O;
+            }
+        }
+    }
+    
+    return composition;
+}
+
+// Format elemental composition as a formula string (e.g., "C172H265N43O51S2")
+function formatFormula(composition) {
+    let formula = '';
+    
+    // Standard order: C, H, N, O, S
+    if (composition.C > 0) formula += 'C' + (composition.C > 1 ? composition.C : '');
+    if (composition.H > 0) formula += 'H' + (composition.H > 1 ? composition.H : '');
+    if (composition.N > 0) formula += 'N' + (composition.N > 1 ? composition.N : '');
+    if (composition.O > 0) formula += 'O' + (composition.O > 1 ? composition.O : '');
+    if (composition.S > 0) formula += 'S' + (composition.S > 1 ? composition.S : '');
+    
+    return formula;
+}
 
 // Parse FASTA sequence (supports multiple chains/proteins)
 function parseFasta(fastaInput) {
@@ -74,12 +146,17 @@ function parseFasta(fastaInput) {
 }
 
 // Calculate peptide mass
-function calculateMass(peptideSequence) {
+function calculateMass(peptideSequence, cysteineAlkylation = false) {
     let mass = H2O; // Add water for peptide
     
     for (let aa of peptideSequence) {
         if (aminoAcidMasses[aa]) {
             mass += aminoAcidMasses[aa];
+            
+            // Add carbamidomethyl modification for cysteines
+            if (aa === 'C' && cysteineAlkylation) {
+                mass += CARBAMIDOMETHYL.mass;
+            }
         }
     }
     
@@ -87,7 +164,7 @@ function calculateMass(peptideSequence) {
 }
 
 // Perform tryptic digest on a single sequence
-function trypticDigest(sequence, missedCleavages, chainName) {
+function trypticDigest(sequence, missedCleavages, chainName, cysteineAlkylation = false) {
     const peptides = [];
     const cleavageSites = [];
     
@@ -110,13 +187,18 @@ function trypticDigest(sequence, missedCleavages, chainName) {
             const peptideSeq = sequence.substring(startPos, endPos);
             
             if (peptideSeq.length > 0) {
-                const mass = calculateMass(peptideSeq);
+                const mass = calculateMass(peptideSeq, cysteineAlkylation);
+                const composition = calculateFormula(peptideSeq, cysteineAlkylation);
+                const formula = formatFormula(composition);
+                
                 peptides.push({
                     chain: chainName,
                     sequence: peptideSeq,
                     startPos: startPos + 1, // 1-indexed
                     endPos: endPos,
-                    mass: mass
+                    mass: mass,
+                    formula: formula,
+                    composition: composition
                 });
             }
         }
@@ -126,11 +208,11 @@ function trypticDigest(sequence, missedCleavages, chainName) {
 }
 
 // Perform tryptic digest on all chains
-function digestAllChains(chains, missedCleavages) {
+function digestAllChains(chains, missedCleavages, cysteineAlkylation = false) {
     let allPeptides = [];
     
     for (let chain of chains) {
-        const peptides = trypticDigest(chain.sequence, missedCleavages, chain.header);
+        const peptides = trypticDigest(chain.sequence, missedCleavages, chain.header, cysteineAlkylation);
         allPeptides = allPeptides.concat(peptides);
     }
     
@@ -138,7 +220,7 @@ function digestAllChains(chains, missedCleavages) {
 }
 
 // Display results in table
-function displayResults(peptides) {
+function displayResults(peptides, filteredCount = 0) {
     const resultsBody = document.getElementById('resultsBody');
     const resultsSection = document.getElementById('resultsSection');
     const summary = document.getElementById('summary');
@@ -160,23 +242,24 @@ function displayResults(peptides) {
     
     // Show summary
     const totalMass = peptides.reduce((sum, p) => sum + p.mass, 0);
-    const avgMass = totalMass / peptides.length;
+    const avgMass = peptides.length > 0 ? totalMass / peptides.length : 0;
     
     // Count unique chains
     const uniqueChains = [...new Set(peptides.map(p => p.chain))];
     const chainInfo = uniqueChains.length > 1 ? ` across ${uniqueChains.length} chain(s)` : '';
+    const filteredInfo = filteredCount > 0 ? ` | ${filteredCount} peptide(s) filtered out` : '';
     
     summary.innerHTML = `
         <strong>Summary:</strong> 
         ${peptides.length} peptide(s) generated${chainInfo} | 
-        Average mass: ${avgMass.toFixed(5)} Da
+        Average mass: ${avgMass.toFixed(5)} Da${filteredInfo}
     `;
     
     resultsSection.style.display = 'block';
     resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
-// Export to CSV
+// Export to CSV (original format)
 function exportToCSV(peptides) {
     const headers = ['ID', 'Chain/Protein', 'Sequence', 'Start Position', 'End Position', 'Mass (Da)'];
     const rows = peptides.map((peptide, index) => [
@@ -199,6 +282,44 @@ function exportToCSV(peptides) {
     const a = document.createElement('a');
     a.href = url;
     a.download = 'tryptic_digest_results.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Export to Compound Database format
+// Format: Formula, RT, Mass, Cpd, Comments
+// Example: C172H265N43O51,,3748.9465,SequenceName,1-31
+function exportToCompoundDB(peptides) {
+    // Get selected protein name for filename
+    const proteinSelect = document.getElementById('proteinSelect');
+    const selectedOption = proteinSelect.options[proteinSelect.selectedIndex];
+    const proteinName = selectedOption.text.replace(/[^a-zA-Z0-9]/g, '_'); // Sanitize for filename
+    
+    // Header comments
+    let csv = '# Compound database,,,,\n';
+    csv += '# Version: TrypticDigestor Export,,,,\n';
+    csv += '### Formula, Retention Time, Mass, Compound name, Description\n';
+    csv += '# Formula, RT, Mass, Cpd, Comments\n';
+    
+    // Data rows
+    peptides.forEach(peptide => {
+        const formula = peptide.formula;
+        const rt = ''; // Empty retention time
+        const mass = peptide.mass.toFixed(4);
+        const cpd = peptide.sequence; // Sequence as compound name
+        const comments = `${peptide.startPos}-${peptide.endPos}`; // Position range
+        
+        csv += `${formula},${rt},${mass},${cpd},${comments}\n`;
+    });
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${proteinName}_trypticDigest_db.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -258,6 +379,8 @@ document.getElementById('digestButton').addEventListener('click', () => {
     try {
         const fastaInput = document.getElementById('fastaInput').value;
         const missedCleavages = parseInt(document.getElementById('missedCleavages').value);
+        const minPeptideLength = parseInt(document.getElementById('minPeptideLength').value) || 1;
+        const cysteineAlkylation = document.getElementById('cysteineAlkylation').checked;
         
         if (!fastaInput.trim()) {
             alert('Please enter a FASTA sequence');
@@ -269,14 +392,25 @@ document.getElementById('digestButton').addEventListener('click', () => {
             return;
         }
         
+        if (minPeptideLength < 1 || minPeptideLength > 100) {
+            alert('Minimum peptide length must be between 1 and 100');
+            return;
+        }
+        
         const chains = parseFasta(fastaInput);
         if (chains.length === 0) {
             alert('No valid sequences found in FASTA input');
             return;
         }
         
-        currentPeptides = digestAllChains(chains, missedCleavages);
-        displayResults(currentPeptides);
+        // Generate peptides and filter by minimum length
+        let allPeptides = digestAllChains(chains, missedCleavages, cysteineAlkylation);
+        const unfilteredCount = allPeptides.length;
+        
+        currentPeptides = allPeptides.filter(p => p.sequence.length >= minPeptideLength);
+        const filteredCount = unfilteredCount - currentPeptides.length;
+        
+        displayResults(currentPeptides, filteredCount);
         
     } catch (error) {
         alert('Error: ' + error.message);
@@ -286,6 +420,13 @@ document.getElementById('digestButton').addEventListener('click', () => {
 document.getElementById('exportButton').addEventListener('click', () => {
     if (currentPeptides.length > 0) {
         exportToCSV(currentPeptides);
+    }
+});
+
+// Export to Compound DB button
+document.getElementById('exportCompoundDBButton')?.addEventListener('click', () => {
+    if (currentPeptides.length > 0) {
+        exportToCompoundDB(currentPeptides);
     }
 });
 
